@@ -37,18 +37,52 @@ func init() {
 	}
 }
 
+func registerHandlers(handlerMaps ...map[string]func(*discordgo.Session, *discordgo.InteractionCreate)) {
+	combined := make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
+	for _, hm := range handlerMaps {
+		for k, v := range hm {
+			if _, exists := combined[k]; exists {
+				log.Printf("WARNING: handler for command %q is being overwritten", k)
+			}
+			combined[k] = v
+		}
+	}
+
+	log.Println("Register handlers...")
+	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		if h, ok := combined[i.ApplicationCommandData().Name]; ok {
+			h(s, i)
+		}
+	})
+}
+
+func registerCommands(handlerMaps ...map[string]func(*discordgo.Session, *discordgo.InteractionCreate)) {
+	combined := make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
+	for _, hm := range handlerMaps {
+		for k, v := range hm {
+			if _, exists := combined[k]; exists {
+				log.Printf("WARNING: handler for command %q is being overwritten", k)
+			}
+			combined[k] = v
+		}
+	}
+
+	log.Println("Register handlers...")
+	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		if h, ok := combined[i.ApplicationCommandData().Name]; ok {
+			h(s, i)
+		}
+	})
+}
+
 func main() {
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 
-	var commandHandlers = cmd.GetExampleHandlers()
-
-	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
-			h(s, i)
-		}
-	})
+	registerHandlers(
+		cmd.GetExampleHandlers(),
+	)
 	err := s.Open()
 	if err != nil {
 		log.Fatalf("Cannot open the session: %v", err)
@@ -56,7 +90,10 @@ func main() {
 	defer s.Close()
 
 	log.Println("Adding commands...")
-	var commands = cmd.GetExampleCommands()
+	commands := append(
+		cmd.GetExampleCommands(),
+		// cmd.GetConfCommands()...,
+	)
 	createdCommands, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, ServerID, commands)
 
 	if err != nil {
