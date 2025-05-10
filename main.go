@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 
 	"haram_bot/cmd"
+	"haram_bot/parse_env"
 )
 
 // Bot parameters
@@ -22,12 +23,12 @@ var (
 var s *discordgo.Session
 
 func init() {
-	var DotEnvFilePath string = GetEnvString("ENV_FILE_PATH", ".env")
-	godotenv.Load(DotEnvFilePath)
-	BotToken = GetEnvString("BOT_TOKEN")
-	ServerID = GetEnvString("SERVER_ID", "")
-	AppID = GetEnvString("APP_ID", "")
-	RemoveCommands = GetEnvBool("RM_CMD_ON_SHUTDOWN", true)
+	var dotEnvFilePath string = parse_env.GetEnvString("ENV_FILE_PATH", ".env")
+	godotenv.Load(dotEnvFilePath)
+	BotToken = parse_env.GetEnvString("BOT_TOKEN")
+	ServerID = parse_env.GetEnvString("SERVER_ID", "")
+	AppID = parse_env.GetEnvString("APP_ID", "")
+	RemoveCommands = parse_env.GetEnvBool("RM_CMD_ON_SHUTDOWN", true)
 
 	var err error
 	s, err = discordgo.New("Bot " + BotToken)

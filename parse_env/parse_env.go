@@ -1,4 +1,4 @@
-package main
+package parse_env
 
 import (
 	"log"
