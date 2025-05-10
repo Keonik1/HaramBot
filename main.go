@@ -56,25 +56,6 @@ func registerHandlers(handlerMaps ...map[string]func(*discordgo.Session, *discor
 	})
 }
 
-func registerCommands(handlerMaps ...map[string]func(*discordgo.Session, *discordgo.InteractionCreate)) {
-	combined := make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
-	for _, hm := range handlerMaps {
-		for k, v := range hm {
-			if _, exists := combined[k]; exists {
-				log.Printf("WARNING: handler for command %q is being overwritten", k)
-			}
-			combined[k] = v
-		}
-	}
-
-	log.Println("Register handlers...")
-	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := combined[i.ApplicationCommandData().Name]; ok {
-			h(s, i)
-		}
-	})
-}
-
 func main() {
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
