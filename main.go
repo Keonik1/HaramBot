@@ -63,6 +63,7 @@ func main() {
 
 	registerHandlers(
 		cmd.GetExampleHandlers(),
+		cmd.GetModHandlers(),
 	)
 	err := s.Open()
 	if err != nil {
@@ -73,7 +74,7 @@ func main() {
 	log.Println("Adding commands...")
 	commands := append(
 		cmd.GetExampleCommands(),
-		// cmd.GetConfCommands()...,
+		cmd.GetModCommands()...,
 	)
 	createdCommands, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, ServerID, commands)
 
@@ -84,7 +85,7 @@ func main() {
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
 	log.Println("Press Ctrl+C to exit")
-	cmd.HelloModCommand() //example. TODO: delete
+	// cmd.HelloModCommand() //example. TODO: delete
 	cmd.HelloConfCommand()
 	cmd.HelloUserCommand()
 	<-stop
