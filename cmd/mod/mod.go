@@ -9,6 +9,7 @@ var modCommands = &discordgo.ApplicationCommand{
 	Description: "Moderation commands",
 	Options: []*discordgo.ApplicationCommandOption{
 		GetMuteCommand(), // Add other subcommands here
+		GetBanCommand(),
 	},
 }
 
@@ -18,6 +19,8 @@ func ModHandler(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		switch data.Name {
 		case "mute":
 			handleMute(s, i, data.Options)
+		case "ban":
+			handleBan(s, i, data.Options)
 		}
 	} else if i.Type == discordgo.InteractionApplicationCommandAutocomplete {
 		data := i.ApplicationCommandData().Options[0]
