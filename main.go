@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"slices"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
@@ -64,6 +65,7 @@ func main() {
 	registerHandlers(
 		cmd.GetExampleHandlers(),
 		cmd.GetModHandlers(),
+		cmd.GetHelpHandlers(),
 	)
 	err := s.Open()
 	if err != nil {
@@ -72,9 +74,10 @@ func main() {
 	defer s.Close()
 
 	log.Println("Adding commands...")
-	commands := append(
+	commands := slices.Concat(
 		cmd.GetExampleCommands(),
-		cmd.GetModCommands()...,
+		cmd.GetModCommands(),
+		cmd.GetHelpCommands(),
 	)
 	createdCommands, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, ServerID, commands)
 
