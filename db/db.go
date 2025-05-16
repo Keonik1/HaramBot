@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"encoding/json"
-	"log"
 
 	"github.com/bwmarrin/discordgo"
 	_ "github.com/golang-migrate/migrate/v4/database"
@@ -34,7 +33,7 @@ var InitialServerConfig = ServerConfig{
 }
 
 func Connect() (*sql.DB, error) {
-	log.Println("Attempt connect to db.")
+	tools.LogInfo("Attempt connect to db.")
 	return sql.Open("sqlite3", "./bot.db")
 }
 
@@ -43,7 +42,7 @@ func InitServersTable(s *discordgo.Session, database *sql.DB) {
 	tools.LogInfo("Initializing bot DB.")
 	query := "CREATE TABLE IF NOT EXISTS server_configs (server_id TEXT PRIMARY KEY, config TEXT NOT NULL);"
 	if _, err := database.Exec(query); err != nil {
-		log.Fatalf("ERROR: failed to create table: %v", err)
+		tools.LogFatal("failed to create table: %v", err)
 	}
 
 	query = `
@@ -53,25 +52,25 @@ func InitServersTable(s *discordgo.Session, database *sql.DB) {
 	`
 	statement, err := database.Prepare(query)
 	if err != nil {
-		log.Fatalf("ERROR: server table creation error: %v", err)
+		tools.LogFatal("server table creation error: %v", err)
 	}
 	defer statement.Close()
 
 	for {
 		servers, err := s.UserGuilds(100, "", after, false)
 		if err != nil {
-			log.Fatalf("ERROR: cant get servers: %v", err)
+			tools.LogFatal("cant get servers: %v", err)
 		}
 
 		if len(servers) == 0 {
-			log.Println("INFO: Bot not installed for no one server.")
+			tools.LogInfo("Bot not installed for no one server.")
 			break
 		}
 
 		for _, server := range servers {
-			log.Printf("INFO: Processing server:\n\tServer ID: %s\n\tServer name: %s\n", server.ID, server.Name)
+			tools.LogInfo("Processing server:\n\tServer ID: %s\n\tServer name: %s", server.ID, server.Name)
 			if err := InitServerConfig(statement, server.ID, InitialServerConfig); err != nil {
-				log.Printf("Failed to insert config for server %s: %v", server.ID, err)
+				tools.LogInfo("Failed to insert config for server %s: %v", server.ID, err)
 			}
 		}
 		after = servers[len(servers)-1].ID
@@ -81,7 +80,7 @@ func InitServersTable(s *discordgo.Session, database *sql.DB) {
 		}
 	}
 
-	log.Println("INFO: Finish DB initializing.")
+	tools.LogInfo("Finish DB initializing.")
 }
 
 func saveServerConfig(stmt *sql.Stmt, serverID string, config ServerConfig) error {

@@ -2,7 +2,6 @@ package tools
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -16,7 +15,7 @@ func GetNotRequiredOptionValue(options []*discordgo.ApplicationCommandInteractio
 
 func CheckInteractionError(err error) {
 	if err != nil {
-		log.Println("Error responding to interaction:", err)
+		LogInfo("Error responding to interaction: %v", err)
 	}
 }
 
@@ -45,13 +44,13 @@ func RegisterHandlers(s *discordgo.Session, handlerMaps ...map[string]func(*disc
 	for _, hm := range handlerMaps {
 		for k, v := range hm {
 			if _, exists := combined[k]; exists {
-				log.Printf("WARNING: handler for command %q is being overwritten", k)
+				LogInfo("WARNING: handler for command %q is being overwritten", k)
 			}
 			combined[k] = v
 		}
 	}
 
-	log.Println("Register handlers...")
+	LogInfo("Register handlers...")
 	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if h, ok := combined[i.ApplicationCommandData().Name]; ok {
 			h(s, i)

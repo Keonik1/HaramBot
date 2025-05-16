@@ -3,7 +3,6 @@ package mod
 import (
 	"fmt"
 	"haram_bot/tools"
-	"log"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -32,7 +31,7 @@ func handleBan(s *discordgo.Session, i *discordgo.InteractionCreate, options []*
 	username := options[0].StringValue()
 	reason := tools.GetNotRequiredOptionValue(options, 1, "No reason provided.")
 
-	log.Printf("Banned user %s. Reason: %s", username, reason)
+	tools.LogInfo("Banned user %s. Reason: %s", username, reason)
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

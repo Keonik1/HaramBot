@@ -2,7 +2,6 @@ package mod
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/xhit/go-str2duration/v2"
@@ -46,7 +45,7 @@ func handleMute(s *discordgo.Session, i *discordgo.InteractionCreate, options []
 		return
 	}
 
-	log.Printf("Mute user %s for %s", options[0].Value, duration) //TODO: replace this to mute logic
+	tools.LogInfo("Mute user %s for %s", options[0].Value, duration) //TODO: replace this to mute logic
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,

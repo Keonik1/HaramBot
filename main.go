@@ -16,12 +16,13 @@ import (
 	"haram_bot/tools"
 )
 
-// Bot parameters
 var (
 	ServerID       string
 	BotToken       string
 	RemoveCommands bool
 	AppID          string
+	LogLevel       string
+	LogDestination string
 )
 
 var s *discordgo.Session
@@ -33,6 +34,8 @@ func init() {
 	ServerID = parse_env.GetEnvString("SERVER_ID", "")
 	AppID = parse_env.GetEnvString("APP_ID", "")
 	RemoveCommands = parse_env.GetEnvBool("RM_CMD_ON_SHUTDOWN", true)
+	LogLevel = parse_env.GetEnvString("LOG_LEVEL", "info")
+	LogDestination = parse_env.GetEnvString("LOG_DESTINATION", "console")
 
 	var err error
 	s, err = discordgo.New("Bot " + BotToken)
@@ -42,14 +45,25 @@ func init() {
 }
 
 func main() {
+	if err := tools.InitLogger(LogLevel, LogDestination); err != nil {
+		log.Fatalf("ERROR: logger initialization error: %v", err)
+	}
+	tools.LogTrace("Logger active")
+
+	// Test logger
+	// for i := 0; i < 3010; i++ {
+	// 	tools.LogInfo("Log i = %v", i)
+	// 	time.Sleep(3 * time.Millisecond)
+	// }
+
 	database, err := db.Connect()
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		tools.LogFatal("Failed to connect to database: %v", err)
 	}
 	defer database.Close()
 
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
+		tools.LogInfo("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 
 	tools.RegisterHandlers(s,
@@ -59,13 +73,13 @@ func main() {
 	)
 	err = s.Open()
 	if err != nil {
-		log.Fatalf("Cannot open the session: %v", err)
+		tools.LogFatal("Cannot open the session: %v", err)
 	}
 	defer s.Close()
 
 	db.InitServersTable(s, database)
 
-	log.Println("Adding commands...")
+	tools.LogInfo("Adding commands...")
 	commands := slices.Concat(
 		cmd.GetExampleCommands(),
 		cmd.GetModCommands(),
@@ -74,25 +88,25 @@ func main() {
 	createdCommands, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, ServerID, commands)
 
 	if err != nil {
-		log.Fatalf("Cannot register commands: %v", err)
+		tools.LogFatal("Cannot register commands: %v", err)
 	}
 
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt)
-	log.Println("Press Ctrl+C to exit")
+	tools.LogInfo("Press Ctrl+C to exit")
 	// cmd.HelloModCommand() //example. TODO: delete
 	cmd.HelloConfCommand()
 	cmd.HelloUserCommand()
 	<-stop
 
 	if RemoveCommands {
-		log.Println("Removing commands...")
+		tools.LogInfo("Removing commands...")
 		for _, cmd := range createdCommands {
 			err := s.ApplicationCommandDelete(s.State.User.ID, ServerID, cmd.ID)
 			if err != nil {
-				log.Fatalf("Cannot delete %q command: %v", cmd.Name, err)
+				tools.LogError("Cannot delete %q command: %v", cmd.Name, err)
 			}
 		}
 	}
-	log.Println("Gracefully shutting down")
+	tools.LogInfo("Gracefully shutting down")
 }
