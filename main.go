@@ -8,9 +8,12 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
+	_ "github.com/mattn/go-sqlite3"
 
 	"haram_bot/cmd"
+	"haram_bot/db"
 	"haram_bot/parse_env"
+	"haram_bot/tools"
 )
 
 // Bot parameters
@@ -38,40 +41,29 @@ func init() {
 	}
 }
 
-func registerHandlers(handlerMaps ...map[string]func(*discordgo.Session, *discordgo.InteractionCreate)) {
-	combined := make(map[string]func(*discordgo.Session, *discordgo.InteractionCreate))
-	for _, hm := range handlerMaps {
-		for k, v := range hm {
-			if _, exists := combined[k]; exists {
-				log.Printf("WARNING: handler for command %q is being overwritten", k)
-			}
-			combined[k] = v
-		}
-	}
-
-	log.Println("Register handlers...")
-	s.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-		if h, ok := combined[i.ApplicationCommandData().Name]; ok {
-			h(s, i)
-		}
-	})
-}
-
 func main() {
+	database, err := db.Connect()
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer database.Close()
+
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Printf("Logged in as: %v#%v", s.State.User.Username, s.State.User.Discriminator)
 	})
 
-	registerHandlers(
+	tools.RegisterHandlers(s,
 		cmd.GetExampleHandlers(),
 		cmd.GetModHandlers(),
 		cmd.GetHelpHandlers(),
 	)
-	err := s.Open()
+	err = s.Open()
 	if err != nil {
 		log.Fatalf("Cannot open the session: %v", err)
 	}
 	defer s.Close()
+
+	db.InitServersTable(s, database)
 
 	log.Println("Adding commands...")
 	commands := slices.Concat(
