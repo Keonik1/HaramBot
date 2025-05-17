@@ -15,7 +15,7 @@ var banCommand = &discordgo.ApplicationCommandOption{
 		{
 			Name:        "username",
 			Description: "User to ban",
-			Type:        discordgo.ApplicationCommandOptionString,
+			Type:        discordgo.ApplicationCommandOptionUser,
 			Required:    true,
 		},
 		{
@@ -28,15 +28,15 @@ var banCommand = &discordgo.ApplicationCommandOption{
 }
 
 func handleBan(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption) {
-	username := options[0].StringValue()
 	reason := tools.GetNotRequiredOptionValue(options, 1, "No reason provided.")
 
-	tools.LogInfo("Banned user %s. Reason: %s", username, reason)
+	bannedUser := options[0].UserValue(s)
+	tools.LogInfo("Banned user %s (%s). Reason: %s", bannedUser.ID, bannedUser.GlobalName, reason)
 
 	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("User `%s` has been banned.\nReason: %s", username, reason),
+			Content: fmt.Sprintf("User %s has been banned.\nReason: %s", bannedUser.Mention(), reason),
 		},
 	})
 	tools.CheckInteractionError(err)

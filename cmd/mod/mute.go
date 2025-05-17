@@ -15,11 +15,10 @@ var muteCommand = &discordgo.ApplicationCommandOption{
 	Type:        discordgo.ApplicationCommandOptionSubCommand,
 	Options: []*discordgo.ApplicationCommandOption{
 		{
-			Name:         "username",
-			Description:  "Username to be muted",
-			Type:         discordgo.ApplicationCommandOptionString,
-			Required:     true,
-			Autocomplete: false,
+			Name:        "username",
+			Description: "Username to be muted",
+			Type:        discordgo.ApplicationCommandOptionUser,
+			Required:    true,
 		},
 		{
 			Name:         "time",
@@ -44,14 +43,14 @@ func handleMute(s *discordgo.Session, i *discordgo.InteractionCreate, options []
 		tools.SendTimeParseErrorMessage(s, i, options[1].StringValue())
 		return
 	}
-
-	tools.LogInfo("Mute user %s for %s", options[0].Value, duration) //TODO: replace this to mute logic
+	mutedUser := options[0].UserValue(s)
+	tools.LogInfo("Mute user %s (%s) for %s", mutedUser.ID, mutedUser.GlobalName, duration) //TODO: replace this to mute logic
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("User `%s` was muted for `%s`\nReason:\n%s",
-				options[0].StringValue(),
+			Content: fmt.Sprintf("User %s was muted for `%s`\nReason:\n%s",
+				mutedUser.Mention(),
 				options[1].StringValue(),
 				tools.GetNotRequiredOptionValue(options, 2, "No description provided."),
 			),
