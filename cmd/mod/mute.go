@@ -43,20 +43,61 @@ func handleMute(s *discordgo.Session, i *discordgo.InteractionCreate, options []
 		tools.SendTimeParseErrorMessage(s, i, options[1].StringValue())
 		return
 	}
+
 	mutedUser := options[0].UserValue(s)
+	reason := tools.GetNotRequiredOptionValue(options, 2, "No description provided.")
+	unmuteTime := tools.FormatTimeWithOffset(duration)
+
 	tools.LogInfo("Mute user %s (%s) for %s", mutedUser.ID, mutedUser.GlobalName, duration) //TODO: replace this to mute logic
 
 	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 		Type: discordgo.InteractionResponseChannelMessageWithSource,
 		Data: &discordgo.InteractionResponseData{
-			Content: fmt.Sprintf("User %s was muted for `%s`\nReason:\n%s",
-				mutedUser.Mention(),
-				options[1].StringValue(),
-				tools.GetNotRequiredOptionValue(options, 2, "No description provided."),
-			),
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title: "🔇 User Muted",
+					Description: fmt.Sprintf("%s was muted for `%s`.\n⏰ Unmute date: `%s`\nReason: \n%s",
+						mutedUser.Mention(), options[1].StringValue(), unmuteTime, reason),
+					Color: 0xffa500,
+				},
+			},
+			Components: []discordgo.MessageComponent{
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.Button{
+							Label:    "Unmute",
+							Style:    discordgo.DangerButton,
+							CustomID: fmt.Sprintf("mod:unmute:%s", mutedUser.ID),
+						},
+					},
+				},
+			},
 		},
 	})
 	tools.CheckInteractionError(err)
+}
+
+func handleComponentUnmute(s *discordgo.Session, i *discordgo.InteractionCreate, id string) {
+	// TODO: Реализовать размут пользователя (например, снять роль мута)
+
+	messageWithUnmuteButton := i.Message
+
+	err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Embeds: []*discordgo.MessageEmbed{
+				{
+					Title:       "🔊 User Unmuted",
+					Description: fmt.Sprintf("User <@%s> has been manually unmuted by the user %s", id, i.Member.Mention()),
+					Color:       0x6aa300,
+				},
+			},
+		},
+	})
+	tools.CheckInteractionError(err)
+
+	tools.DisableButtonByID(s, i, messageWithUnmuteButton, "mod:unmute:")
+
 }
 
 func autocompleteMute(s *discordgo.Session, i *discordgo.InteractionCreate, options []*discordgo.ApplicationCommandInteractionDataOption) {
