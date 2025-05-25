@@ -69,6 +69,7 @@ func main() {
 	tools.RegisterHandlers(s,
 		cmd.GetExampleHandlers(),
 		cmd.GetModHandlers(),
+		cmd.GetConfHandlers(),
 		cmd.GetHelpHandlers(),
 	)
 	err = s.Open()
@@ -83,6 +84,7 @@ func main() {
 	commands := slices.Concat(
 		cmd.GetExampleCommands(),
 		cmd.GetModCommands(),
+		cmd.GetConfCommands(),
 		cmd.GetHelpCommands(),
 	)
 	createdCommands, err := s.ApplicationCommandBulkOverwrite(s.State.User.ID, ServerID, commands)

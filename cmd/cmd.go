@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/bwmarrin/discordgo"
 
+	"haram_bot/cmd/conf"
 	"haram_bot/cmd/help"
 	"haram_bot/cmd/mod"
 )
@@ -10,6 +11,7 @@ import (
 const (
 	CmdMod  string = "mod"
 	CmdHelp string = "help"
+	CmdConf string = "conf"
 )
 
 type CommandModule struct {
@@ -25,6 +27,10 @@ var commandModules = map[string]CommandModule{
 	CmdHelp: {
 		Command: help.GetHelpCommands,
 		Handler: help.HelpHandler,
+	},
+	CmdConf: {
+		Command: conf.GetConfCommands,
+		Handler: conf.ConfHandler,
 	},
 }
 
@@ -50,6 +56,14 @@ func GetModCommands() []*discordgo.ApplicationCommand {
 
 func GetModHandlers() map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	return GetHandlersByName(CmdMod)
+}
+
+func GetConfCommands() []*discordgo.ApplicationCommand {
+	return GetCommandsByName(CmdConf)
+}
+
+func GetConfHandlers() map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	return GetHandlersByName(CmdConf)
 }
 
 func GetHelpCommands() []*discordgo.ApplicationCommand {
